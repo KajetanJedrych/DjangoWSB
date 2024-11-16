@@ -1,0 +1,21 @@
+# Wirtualne środowiska
+env/
+venv/
+
+# Pliki konfiguracyjne środowiska
+*.env
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Pliki IDE
+.vscode/
+.idea/
+
+# Pliki logów
+*.log
+
+# Migracje (opcjonalnie, jeśli nie chcesz ich w repozytorium)
+migrations/

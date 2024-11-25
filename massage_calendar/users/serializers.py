@@ -29,7 +29,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        # Remove password2 from the data as it's not needed for user creation
         validated_data.pop('password2')
         password = validated_data.pop('password')
 

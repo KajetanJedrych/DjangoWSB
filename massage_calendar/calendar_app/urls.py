@@ -1,9 +1,10 @@
 from django.urls import path
-from .views import ServiceListView, EmployeeListView, AvailabilityListView, AppointmentCreateView
+from . import views
 
 urlpatterns = [
-    path('services/', ServiceListView.as_view(), name='service-list'),
-    path('employees/', EmployeeListView.as_view(), name='employee-list'),
-    path('availability/', AvailabilityListView.as_view(), name='availability-list'),
-    path('appointments/', AppointmentCreateView.as_view(), name='appointment-create'),
+    path('services/', views.get_services, name='services'),
+    path('employees/', views.get_employees, name='employees'),
+    path('available-slots/', views.get_available_slots, name='available-slots'),
+    path('appointments/', views.get_appointments, name='appointments'),
+    path('appointments/create/', views.create_appointment, name='create-appointment'),
 ]

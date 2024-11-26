@@ -1,14 +1,17 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
 from .models import CustomUser
 from .serializers import UserSerializer, UserRegistrationSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet to handle user-related actions.
+    """
     queryset = CustomUser.objects.all()
 
     def get_serializer_class(self):
@@ -24,6 +27,9 @@ class UserViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
     def create(self, request, *args, **kwargs):
+        """
+        Register a new user.
+        """
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -40,6 +46,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def login(self, request):
+        """
+        Login user and return tokens.
+        """
         username = request.data.get('username')
         password = request.data.get('password')
 
@@ -64,3 +73,23 @@ class UserViewSet(viewsets.ModelViewSet):
                 {'error': 'Invalid credentials'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+    @action(detail=False, methods=['get'])
+    def current_user(self, request):
+        """
+        Retrieve details of the currently authenticated user.
+        """
+        user = request.user
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+        })
+
+    @action(detail=False, methods=['post'])
+    def logout(self, request):
+        """
+        Handle logout for authenticated users.
+        """
+        # Additional token blacklisting can be added here if using JWT.
+        return Response({'detail': 'Successfully logged out.'}, status=status.HTTP_200_OK)

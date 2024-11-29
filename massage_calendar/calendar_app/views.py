@@ -37,6 +37,8 @@ def get_available_slots(request):
     employee_id = request.GET.get('employee_id')
     service_id = request.GET.get('service_id')
 
+    print(f"Received parameters: date={date_str}, employee_id={employee_id}, service_id={service_id}")
+
     if not all([date_str, employee_id, service_id]):
         return Response(
             {'error': 'Missing required parameters'},
@@ -47,7 +49,12 @@ def get_available_slots(request):
         date = datetime.strptime(date_str, '%Y-%m-%d').date()
         employee = Employee.objects.get(id=employee_id)
         service = Service.objects.get(id=service_id)
-    except (ValueError, Employee.DoesNotExist, Service.DoesNotExist):
+
+        print(f"Parsed date: {date}")
+        print(f"Employee: {employee}")
+        print(f"Service: {service}")
+    except (ValueError, Employee.DoesNotExist, Service.DoesNotExist) as e:
+        print(f"Error parsing parameters: {e}")
         return Response(
             {'error': 'Invalid parameters'},
             status=status.HTTP_400_BAD_REQUEST
@@ -58,43 +65,38 @@ def get_available_slots(request):
         employee=employee,
         date=date
     )
+    print(f"Availabilities found: {availabilities.count()}")
 
     if not availabilities.exists():
-        return Response([])
+        return Response([], status=status.HTTP_404_NOT_FOUND)
 
-    # Get existing appointments
-    existing_appointments = Appointment.objects.filter(
-        employee=employee,
-        date=date,
-        status='scheduled'
-    )
-
+    # No need to check existing appointments for the first booking
     available_slots = []
 
     for availability in availabilities:
         current_time = availability.start_time
         end_time = availability.end_time
+        print(f"Checking availability: {current_time} to {end_time}")
 
         while current_time <= end_time:
-            # Check if this slot overlaps with any existing appointment
+            # Check if this slot allows enough time for the service
             slot_end_time = (
                     datetime.combine(date, current_time) +
                     timedelta(minutes=service.duration)
             ).time()
 
+            print(f"Checking slot: {current_time} to {slot_end_time}")
+
             if slot_end_time <= end_time:
-                is_available = not existing_appointments.filter(
-                    time=current_time
-                ).exists()
+                available_slots.append(current_time.strftime('%H:%M'))
 
-                if is_available:
-                    available_slots.append(current_time.strftime('%H:%M'))
-
+            # Move to next slot (30-minute increments)
             current_time = (
                     datetime.combine(date, current_time) +
                     timedelta(minutes=30)
             ).time()
 
+    print(f"Available slots: {available_slots}")
     return Response(available_slots)
 
 

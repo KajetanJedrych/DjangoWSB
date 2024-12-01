@@ -1,9 +1,7 @@
-# In your_app/management/commands/generate_availabilities.py
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from datetime import datetime, timedelta, date
-from massage_calendar.calendar_app.models import Employee, Availability
-
+from datetime import datetime, timedelta, date, time
+from ...models import Employee, Availability
 
 class Command(BaseCommand):
     help = 'Generate availabilities for all employees'

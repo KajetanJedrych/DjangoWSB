@@ -1,8 +1,9 @@
-# models.py
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.utils.timezone import make_aware
+
 
 
 class Service(models.Model):
@@ -67,8 +68,14 @@ class Appointment(models.Model):
         ordering = ['date', 'time']
 
     def clean(self):
-        # Check if appointment is in the past
+        # Combine date and time for the appointment
         appointment_datetime = timezone.datetime.combine(self.date, self.time)
+
+        # Ensure appointment_datetime is timezone-aware
+        if timezone.is_naive(appointment_datetime):
+            appointment_datetime = make_aware(appointment_datetime)
+
+        # Compare with timezone-aware `timezone.now()`
         if appointment_datetime < timezone.now():
             raise ValidationError("Cannot create appointments in the past")
 

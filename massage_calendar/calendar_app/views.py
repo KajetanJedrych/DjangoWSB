@@ -104,7 +104,12 @@ def get_available_slots(request):
 @permission_classes([IsAuthenticated])
 def get_appointments(request):
     date = request.GET.get('date')
-    appointments = Appointment.objects.filter(date=date)
+    # Log all possible appointments for this date
+    all_date_appointments = Appointment.objects.filter(date=date)
+    for appt in all_date_appointments:
+        print(
+            f"ID: {appt.id}, User ID: {appt.user.id}, Username: {appt.user.username}, Date: {appt.date}, Time: {appt.time}")
+    appointments = Appointment.objects.filter(date=date, user=request.user)
     serializer = AppointmentSerializer(appointments, many=True)
     return Response(serializer.data)
 

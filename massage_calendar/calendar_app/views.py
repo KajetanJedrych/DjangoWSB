@@ -104,12 +104,24 @@ def get_available_slots(request):
 @permission_classes([IsAuthenticated])
 def get_appointments(request):
     date = request.GET.get('date')
-    # Log all possible appointments for this date
-    all_date_appointments = Appointment.objects.filter(date=date)
-    for appt in all_date_appointments:
+    end_date = request.GET.get('end_date')
+
+    # If end_date is provided, use date range filtering
+    if end_date:
+        appointments = Appointment.objects.filter(
+            date__gte=date,  # greater than or equal to start date
+            date__lte=end_date,  # less than or equal to end date
+            user=request.user
+        )
+    else:
+        # Fallback to existing single date filtering
+        appointments = Appointment.objects.filter(date=date, user=request.user)
+
+    # Log appointments for debugging
+    for appt in appointments:
         print(
             f"ID: {appt.id}, User ID: {appt.user.id}, Username: {appt.user.username}, Date: {appt.date}, Time: {appt.time}")
-    appointments = Appointment.objects.filter(date=date, user=request.user)
+
     serializer = AppointmentSerializer(appointments, many=True)
     return Response(serializer.data)
 

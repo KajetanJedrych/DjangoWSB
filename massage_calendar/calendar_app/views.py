@@ -100,29 +100,58 @@ def get_available_slots(request):
     return Response(available_slots)
 
 
+from django.db.models import Q
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_appointments(request):
+    # Robust manager check
+    is_manager = request.user.groups.filter(name__iexact='Managers').exists()
+    print("All Groups:", list(request.user.groups.values_list('name', flat=True)))
+
+    # Base queryset
+    if is_manager:
+        # Explicitly fetch ALL appointments for managers
+        queryset = Appointment.objects.all()
+    else:
+        # Regular users see only their own appointments
+        queryset = Appointment.objects.filter(user=request.user)
+
+    # Get query parameters
     date = request.GET.get('date')
     end_date = request.GET.get('end_date')
 
-    # If end_date is provided, use date range filtering
-    if end_date:
-        appointments = Appointment.objects.filter(
-            date__gte=date,  # greater than or equal to start date
-            date__lte=end_date,  # less than or equal to end date
-            user=request.user
-        )
-    else:
-        # Fallback to existing single date filtering
-        appointments = Appointment.objects.filter(date=date, user=request.user)
+    # Date filtering
+    if date:
+        if end_date:
+            queryset = queryset.filter(
+                date__gte=date,
+                date__lte=end_date
+            )
+        else:
+            queryset = queryset.filter(date=date)
 
-    # Log appointments for debugging
-    for appt in appointments:
+    # Extensive logging
+    print(f"Current User: {request.user.username}")
+    print(f"Is Manager: {is_manager}")
+    print(f"Total Appointments Found: {queryset.count()}")
+
+    # Detailed appointment logging
+    for appt in queryset:
         print(
-            f"ID: {appt.id}, User ID: {appt.user.id}, Username: {appt.user.username}, Date: {appt.date}, Time: {appt.time}")
+            f"Appointment - "
+            f"ID: {appt.id}, "
+            f"User: {appt.user.username}, "
+            f"Date: {appt.date}, "
+            f"Time: {appt.time}, "
+            f"Status: {appt.status}"
+        )
 
-    serializer = AppointmentSerializer(appointments, many=True)
+    # Use select_related to optimize query and fetch related data
+    queryset = queryset.select_related('user', 'service', 'employee')
+
+    serializer = AppointmentSerializer(queryset, many=True)
     return Response(serializer.data)
 
 

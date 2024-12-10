@@ -10,16 +10,27 @@ from .serializers import UserSerializer, UserRegistrationSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
     """
-    ViewSet to handle user-related actions.
+    ViewSet to handle user-related actions, including registration, login,
+    retrieving the currently authenticated user, and logout functionality.
     """
     queryset = CustomUser.objects.all()
 
     def get_serializer_class(self):
+        """
+        Determine which serializer to use based on the action being performed.
+        - Use `UserRegistrationSerializer` for user creation (registration).
+        - Use `UserSerializer` for all other actions.
+        """
         if self.action == 'create':
             return UserRegistrationSerializer
         return UserSerializer
 
     def get_permissions(self):
+        """
+         Determine which permissions to apply based on the action being performed.
+         - Allow unrestricted access (`AllowAny`) for `create` (registration) and `login` actions.
+         - Require authentication (`IsAuthenticated`) for all other actions.
+         """
         if self.action in ['create', 'login']:
             permission_classes = [AllowAny]
         else:
@@ -29,6 +40,10 @@ class UserViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """
         Register a new user.
+        - Validates the provided user data using `UserRegistrationSerializer`.
+        - Creates a new user if the data is valid.
+        - Generates JWT tokens (access and refresh) for the newly registered user.
+        - Returns a response with the user details and tokens upon successful registration.
         """
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -47,7 +62,10 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def login(self, request):
         """
-        Login user and return tokens.
+        Login a user and return JWT tokens.
+        - Authenticates the user based on the provided username and password.
+        - Returns the user's data and tokens if authentication is successful.
+        - Returns an error response if authentication fails.
         """
         username = request.data.get('username')
         password = request.data.get('password')
@@ -78,6 +96,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def current_user(self, request):
         """
         Retrieve details of the currently authenticated user.
+        - Returns the authenticated user's ID, username, and email.
         """
         user = request.user
         return Response({
@@ -90,6 +109,8 @@ class UserViewSet(viewsets.ModelViewSet):
     def logout(self, request):
         """
         Handle logout for authenticated users.
+        - Currently, this only returns a success message.
+        - Additional functionality (e.g., token blacklisting) can be added for JWT-based logout.
         """
         # Additional token blacklisting can be added here if using JWT.
         return Response({'detail': 'Successfully logged out.'}, status=status.HTTP_200_OK)

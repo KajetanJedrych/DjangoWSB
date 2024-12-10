@@ -12,6 +12,9 @@ from .serializers import (ServiceSerializer, EmployeeSerializer,
 
 @api_view(['GET'])
 def get_services(request):
+    """
+    Retrieve all active services.
+    """
     services = Service.objects.filter(active=True)
     serializer = ServiceSerializer(services, many=True)
     return Response(serializer.data)
@@ -19,6 +22,9 @@ def get_services(request):
 
 @api_view(['GET'])
 def get_employees(request):
+    """
+     Retrieve all active employees or those offering a specific service.
+     """
     service_id = request.GET.get('service_id')
     if service_id:
         employees = Employee.objects.filter(
@@ -33,6 +39,9 @@ def get_employees(request):
 
 @api_view(['GET'])
 def get_available_slots(request):
+    """
+    Retrieve available time slots for a given date, employee, and service.
+    """
     date_str = request.GET.get('date')
     employee_id = request.GET.get('employee_id')
     service_id = request.GET.get('service_id')
@@ -106,6 +115,9 @@ from django.db.models import Q
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_appointments(request):
+    """
+    Retrieve appointments for the current user or all appointments if the user is a manager.
+    """
     # Robust manager check
     is_manager = request.user.groups.filter(name__iexact='Managers').exists()
     print("All Groups:", list(request.user.groups.values_list('name', flat=True)))
@@ -158,6 +170,9 @@ def get_appointments(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_appointment(request):
+    """
+    Create a new appointment for the authenticated user.
+    """
     data = request.data.copy()
     data['user'] = request.user.id
 

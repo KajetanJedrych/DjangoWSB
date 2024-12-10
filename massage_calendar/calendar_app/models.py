@@ -7,6 +7,9 @@ from django.utils.timezone import make_aware
 
 
 class Service(models.Model):
+    """
+    Represents a service offered (e.g., massage, therapy session).
+    """
     name = models.CharField(max_length=100)
     description = models.TextField()
     duration = models.PositiveIntegerField(help_text="Duration in minutes")
@@ -17,6 +20,9 @@ class Service(models.Model):
 
 
 class Employee(models.Model):
+    """
+    Represents an employee providing services.
+    """
     name = models.CharField(max_length=100)
     specialization = models.CharField(max_length=100, blank=True, null=True)
     services = models.ManyToManyField(Service, related_name='employees')
@@ -27,6 +33,9 @@ class Employee(models.Model):
 
 
 class Availability(models.Model):
+    """
+    Represents an employee's availability for a specific date and time.
+    """
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     date = models.DateField()
     start_time = models.TimeField()
@@ -37,6 +46,11 @@ class Availability(models.Model):
         verbose_name_plural = "Availabilities"
 
     def clean(self):
+        """
+         Validates the availability instance:
+         - Ensures start_time is before end_time.
+         - Disallows setting availability for past dates.
+         """
         if self.start_time >= self.end_time:
             raise ValidationError("End time must be after start time")
         if self.date < timezone.now().date():
@@ -47,6 +61,9 @@ class Availability(models.Model):
 
 
 class Appointment(models.Model):
+    """
+    Represents a booked appointment for a service.
+    """
     STATUS_CHOICES = [
         ('scheduled', 'Scheduled'),
         ('completed', 'Completed'),
@@ -68,6 +85,12 @@ class Appointment(models.Model):
         ordering = ['date', 'time']
 
     def clean(self):
+        """
+        Validates the appointment instance:
+        - Disallows booking in the past.
+        - Ensures the employee is available at the specified time.
+        - Checks for overlapping appointments.
+        """
         # Combine date and time for the appointment
         appointment_datetime = timezone.datetime.combine(self.date, self.time)
 

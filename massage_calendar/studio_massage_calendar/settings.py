@@ -12,58 +12,53 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Base directory of the project.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Security settings.
+SECRET_KEY = 'django-insecure-n9!n&)5uebxt4@e1urk0fq7suc2*ewf=9p8e%oyjr#8y@-4-5g'  # Keep this secret in production.
+DEBUG = True  # Enable debugging mode (should be False in production).
+ALLOWED_HOSTS = []  # Define allowed hosts for the application.
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-n9!n&)5uebxt4@e1urk0fq7suc2*ewf=9p8e%oyjr#8y@-4-5g'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
-
-# Application definition
-
+# Installed apps (default and custom).
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'rest_framework',
-    'users',
-    'calendar_app',
-    'corsheaders',
+    'django.contrib.admin',  # Admin panel.
+    'django.contrib.auth',  # Authentication framework.
+    'django.contrib.contenttypes',  # Content type framework.
+    'django.contrib.sessions',  # Session framework.
+    'django.contrib.messages',  # Messaging framework.
+    'django.contrib.staticfiles',  # Static file management.
+    'rest_framework',  # Django REST framework.
+    'users',  # Custom user application.
+    'calendar_app',  # Calendar application.
+    'corsheaders',  # Cross-Origin Resource Sharing middleware.
 ]
 
+# Middleware configuration.
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Enable CORS support.
+    'django.middleware.common.CommonMiddleware',  # Common HTTP middleware.
+    'django.middleware.security.SecurityMiddleware',  # Security-related middleware.
+    'django.contrib.sessions.middleware.SessionMiddleware',  # Session management.
+    'django.middleware.common.CommonMiddleware',  # General middleware.
+    'django.middleware.csrf.CsrfViewMiddleware',  # Cross-Site Request Forgery protection.
+    'django.contrib.auth.middleware.AuthenticationMiddleware',  # Authentication handling.
+    'django.contrib.messages.middleware.MessageMiddleware',  # Message framework.
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',  # Protect against clickjacking.
 ]
 
+# URL and WSGI configurations.
 ROOT_URLCONF = 'studio_massage_calendar.urls'
+WSGI_APPLICATION = 'studio_massage_calendar.wsgi.application'
 
+# Template configuration.
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',  # Template engine.
+        'DIRS': [],  # Additional directories for templates.
+        'APP_DIRS': True,  # Auto-load templates from apps.
         'OPTIONS': {
-            'context_processors': [
+            'context_processors': [  # Context processors for templates.
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -73,74 +68,51 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'studio_massage_calendar.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
+# Database configuration.
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'calendar_db',
-        'USER': 'postgres',
-        'PASSWORD': 'zaq1@WSX',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.postgresql',  # Use PostgreSQL database.
+        'NAME': 'calendar_db',  # Database name.
+        'USER': 'postgres',  # Database user.
+        'PASSWORD': 'zaq1@WSX',  # Database password.
+        'HOST': 'localhost',  # Database host.
+        'PORT': '5432',  # Database port.
     }
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
-
+# Password validation rules.
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},  # Avoid similar passwords.
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},  # Enforce minimum length.
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},  # Disallow common passwords.
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},  # Disallow numeric passwords.
 ]
 
+# Localization settings.
+LANGUAGE_CODE = 'en-us'  # Default language.
+TIME_ZONE = 'UTC'  # Default timezone.
+USE_I18N = True  # Enable internationalization.
+USE_TZ = True  # Enable timezone support.
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
+# CORS configuration.
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins (adjust for production).
+CORS_ALLOW_CREDENTIALS = True  # Allow sending credentials.
 
-LANGUAGE_CODE = 'en-us'
+# Static files configuration.
+STATIC_URL = 'static/'  # URL path for static files.
 
-TIME_ZONE = 'UTC'
+# Primary key field type.
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'  # Use BigAutoField for primary keys.
 
-USE_I18N = True
-
-USE_TZ = True
-
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
-STATIC_URL = 'static/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+# REST framework configuration.
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Use JWT for authentication.
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.IsAuthenticated',  # Default permission: authenticated users only.
     ],
 }
 
-AUTH_USER_MODEL = 'users.CustomUser'
+# Custom user model.
+AUTH_USER_MODEL = 'users.CustomUser'  # Replace the default user model with the custom one.

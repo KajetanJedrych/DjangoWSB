@@ -1,8 +1,8 @@
+from datetime import timedelta
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from django.utils.timezone import make_aware
 
 
 
@@ -87,18 +87,16 @@ class Appointment(models.Model):
     def clean(self):
         """
         Validates the appointment instance:
-        - Disallows booking in the past.
-        - Ensures the employee is available at the specified time.
-        - Checks for overlapping appointments.
+        - Disallows booking in the past
+        - Ensures the employee is available at the specified time
+        - Checks for overlapping appointments
         """
         # Combine date and time for the appointment
-        appointment_datetime = timezone.datetime.combine(self.date, self.time)
+        appointment_datetime = timezone.make_aware(
+            timezone.datetime.combine(self.date, self.time)
+        )
 
-        # Ensure appointment_datetime is timezone-aware
-        if timezone.is_naive(appointment_datetime):
-            appointment_datetime = make_aware(appointment_datetime)
-
-        # Compare with timezone-aware `timezone.now()`
+        # Prevent booking in the past
         if appointment_datetime < timezone.now():
             raise ValidationError("Cannot create appointments in the past")
 
@@ -107,21 +105,37 @@ class Appointment(models.Model):
             employee=self.employee,
             date=self.date,
             start_time__lte=self.time,
-            end_time__gte=self.time
+            end_time__gte=(
+                    timezone.datetime.combine(self.date, self.time) +
+                    timedelta(minutes=self.service.duration)
+            ).time()
         )
         if not availability.exists():
-            raise ValidationError("Employee is not available at this time")
+            raise ValidationError("Employee is not available for the entire service duration")
 
         # Check for overlapping appointments
-        overlapping = Appointment.objects.filter(
+        conflicting_appointments = Appointment.objects.filter(
             employee=self.employee,
             date=self.date,
-            time=self.time,
             status='scheduled'
         ).exclude(id=self.id)
 
-        if overlapping.exists():
-            raise ValidationError("This time slot is already booked")
+        for existing_appt in conflicting_appointments:
+            # Make existing appointment datetime aware
+            existing_appt_datetime = timezone.make_aware(
+                timezone.datetime.combine(existing_appt.date, existing_appt.time)
+            )
+
+            # Calculate end times
+            existing_end_datetime = existing_appt_datetime + timedelta(minutes=existing_appt.service.duration)
+            new_appt_end_datetime = appointment_datetime + timedelta(minutes=self.service.duration)
+
+            # Check for time slot conflicts
+            if (
+                    (existing_appt_datetime < appointment_datetime < existing_end_datetime) or
+                    (appointment_datetime < existing_appt_datetime < new_appt_end_datetime)
+            ):
+                raise ValidationError("This time slot conflicts with an existing appointment")
 
     def __str__(self):
         return f"{self.user.username} - {self.service.name} on {self.date} at {self.time}"

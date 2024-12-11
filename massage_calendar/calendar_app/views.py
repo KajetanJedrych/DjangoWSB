@@ -1,9 +1,9 @@
+from django.db.models import Q, F
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.utils import timezone
 from datetime import datetime, timedelta
 from .models import Service, Employee, Availability, Appointment
 from .serializers import (ServiceSerializer, EmployeeSerializer,
@@ -79,7 +79,13 @@ def get_available_slots(request):
     if not availabilities.exists():
         return Response([], status=status.HTTP_404_NOT_FOUND)
 
-    # No need to check existing appointments for the first booking
+    # Get existing appointments for the day
+    existing_appointments = Appointment.objects.filter(
+        employee=employee,
+        date=date,
+        status='scheduled'
+    )
+
     available_slots = []
 
     for availability in availabilities:
@@ -89,14 +95,28 @@ def get_available_slots(request):
 
         while current_time <= end_time:
             # Check if this slot allows enough time for the service
-            slot_end_time = (
-                    datetime.combine(date, current_time) +
-                    timedelta(minutes=service.duration)
-            ).time()
+            slot_datetime = datetime.combine(date, current_time)
+            slot_end_datetime = slot_datetime + timedelta(minutes=service.duration)
 
-            print(f"Checking slot: {current_time} to {slot_end_time}")
+            # Verify the slot is within the availability period
+            if slot_end_datetime.time() > end_time:
+                break
 
-            if slot_end_time <= end_time:
+            # Check for conflicts with existing appointments
+            has_conflicts = any(
+                (
+                    # Check if new slot overlaps with existing appointment
+                        current_time < appt.time < slot_end_datetime.time() or
+                        # Check if existing appointment overlaps with new slot
+                        appt.time < slot_end_datetime.time() and
+                        (datetime.combine(date, appt.time) + timedelta(
+                            minutes=appt.service.duration)).time() > current_time
+                )
+                for appt in existing_appointments
+            )
+
+            # If no conflicts, add the slot
+            if not has_conflicts:
                 available_slots.append(current_time.strftime('%H:%M'))
 
             # Move to next slot (30-minute increments)
@@ -108,8 +128,6 @@ def get_available_slots(request):
     print(f"Available slots: {available_slots}")
     return Response(available_slots)
 
-
-from django.db.models import Q
 
 
 @api_view(['GET'])
